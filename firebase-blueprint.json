@@ -1,0 +1,188 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Stores credentials, preferences, and premium status for each visitor.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Corresponding Firebase authentication user UID."
+        },
+        "username": {
+          "type": "string",
+          "description": "The custom user screen title name."
+        },
+        "avatar": {
+          "type": "string",
+          "description": "The active avatar asset selection."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "The designated regional time zone offset."
+        },
+        "onboardingCompleted": {
+          "type": "boolean",
+          "description": "Check flag to determine whether the intro walkthrough was finished."
+        },
+        "isPremium": {
+          "type": "boolean",
+          "description": "Premium mode tier designation."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Metadata creation timestamp ISO."
+        }
+      },
+      "required": ["id", "username", "avatar", "timezone", "onboardingCompleted", "isPremium", "createdAt"]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "A single tracking loop configured by the user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the habit."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The owner creator uid."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the routine loop."
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief instruction/purpose text."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Mind", "Body", "Spirit", "Focus", "Routine"],
+          "description": "The active lifestyle domain category pairing."
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["daily", "weekly", "custom"],
+          "description": "The calendar activation trigger interval check."
+        },
+        "frequencyDays": {
+          "type": "array",
+          "description": "List of weekday integer index values (0-6)."
+        },
+        "reminderTime": {
+          "type": "string",
+          "description": "The selected triggering time indicator."
+        },
+        "isArchived": {
+          "type": "boolean",
+          "description": "Check flag validating if user retired this habit loop."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indicating loop deployment date."
+        }
+      },
+      "required": ["id", "userId", "name", "category", "frequency", "frequencyDays", "isArchived", "createdAt"]
+    },
+    "HabitLog": {
+      "title": "HabitLog",
+      "description": "Single day completion record with journal details.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Concatenated id log key: log-${habitId}-${date}."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Caller validation owner."
+        },
+        "habitId": {
+          "type": "string",
+          "description": "Corresponding parent tracking habit."
+        },
+        "date": {
+          "type": "string",
+          "description": "Check-in target date: YYYY-MM-DD."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Verification of completion indicator status."
+        },
+        "note": {
+          "type": "string",
+          "description": "A brief journal reflection cap of 100 character."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The actual server check-in system logging time."
+        }
+      },
+      "required": ["id", "userId", "habitId", "date", "completed", "updatedAt"]
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "description": "The scheduled alarm or push configuration tracker block.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The alarm tracking code key identifier."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner profile holder identifier."
+        },
+        "habitId": {
+          "type": "string",
+          "description": "Targeted task node connection."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["daily", "habit"],
+          "description": "System wide daily alarms or specifically connected loop triggers."
+        },
+        "time": {
+          "type": "string",
+          "description": "Hour configuration format 24:HH-MM."
+        },
+        "days": {
+          "type": "array",
+          "description": "Active weekdays list indices values."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "On/off state configuration."
+        },
+        "title": {
+          "type": "string",
+          "description": "Customizable push alert message topic."
+        }
+      },
+      "required": ["id", "userId", "type", "time", "days", "active", "title"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection serving authenticated user setups."
+    },
+    "/habits/{habitId}": {
+      "schema": "Habit",
+      "description": "Stores user declared habits and loop tracking parameters."
+    },
+    "/habit_logs/{logId}": {
+      "schema": "HabitLog",
+      "description": "The historical grid checklist check-ins."
+    },
+    "/reminders/{reminderId}": {
+      "schema": "Reminder",
+      "description": "The active scheduler alarm configurations."
+    }
+  }
+}

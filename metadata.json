@@ -1,0 +1,6 @@
+{
+  "name": "Loopzy",
+  "description": "A modern, calming full-stack habit tracker centered on consistency, simple daily check-ins, and emotional support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,295 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* Configure dark variant to respond to .dark class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Poppins", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Loopzy logo palette */
+  --color-brand-50:  #f4f2ff;
+  --color-brand-100: #e9e5ff;
+  --color-brand-200: #d7d0ff;
+  --color-brand-300: #b9adff;
+  --color-brand-400: #8d7cff;
+  --color-brand-500: #5b45ff;
+  --color-brand-600: #4b36f5;
+  --color-brand-700: #3b27d8;
+  --color-brand-800: #2f22ad;
+  --color-brand-900: #281f8a;
+  --color-brand-950: #140f35;
+
+  /* Legacy coral palette */
+  --color-coral-50:  #fff5f3;
+  --color-coral-100: #ffe8e3;
+  --color-coral-200: #ffc9be;
+  --color-coral-300: #ffa08f;
+  --color-coral-400: #ff7a68;
+  --color-coral-500: #ff6b55;
+  --color-coral-600: #f04f38;
+  --color-coral-700: #cc3a26;
+  --color-coral-800: #a82e1d;
+  --color-coral-900: #8a2518;
+
+  /* Custom slate shades used across the app */
+  --color-slate-150: #eef2f6;
+  --color-slate-250: #dce3eb;
+  --color-slate-350: #a8b5c3;
+  --color-slate-850: #111b2f;
+}
+
+:root {
+  --app-surface: #f8fafc;
+  --app-text: #0f172a;
+  --app-card: #ffffff;
+  --app-card-hover: #f1f5f9;
+  --app-border: rgba(0, 0, 0, 0.08);
+  --app-border-strong: rgba(0, 0, 0, 0.12);
+  --app-subtext: #475569;
+  --app-muted: #94a3b8;
+  --app-progress-bg: rgba(0, 0, 0, 0.06);
+}
+
+html.dark {
+  --app-surface: #030712;
+  --app-text: #f1f5f9;
+  --app-card: #0f172a;
+  --app-card-hover: #111B31;
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-border-strong: rgba(255, 255, 255, 0.12);
+  --app-subtext: #94a3b8;
+  --app-muted: #64748b;
+  --app-progress-bg: rgba(255, 255, 255, 0.10);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+html:not(.dark) {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html.dark {
+  background-color: #030712;
+  color: #f1f5f9;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Circular progress ring helper */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.6s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Smooth scrollbar hide */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ========================================================
+   LIGHT MODE OVERRIDES
+   Applied when <html> does NOT have class "dark"
+   ======================================================== */
+
+/* ── Surfaces ────────────────────────────────────────── */
+html:not(.dark) .bg-\[\#030712\] {
+  background-color: #f8fafc;
+}
+html:not(.dark) .bg-\[\#0F172A\] {
+  background-color: #ffffff;
+}
+html:not(.dark) .bg-\[\#0F172A\]\/88 {
+  background-color: #ffffff;
+}
+
+html:not(.dark) .bg-white\/\[0\.045\],
+html:not(.dark) .bg-white\/\[0\.04\] {
+  background-color: #f1f5f9;
+}
+html:not(.dark) .bg-white\/\[0\.035\],
+html:not(.dark) .bg-white\/\[0\.055\] {
+  background-color: #f8fafc;
+}
+
+html:not(.dark) .bg-slate-950\/60 {
+  background-color: #f1f5f9;
+}
+html:not(.dark) .bg-black\/20 {
+  background-color: #e2e8f0;
+}
+html:not(.dark) .bg-white\/10 {
+  background-color: #e2e8f0;
+}
+
+/* ── Text colours ────────────────────────────────────── */
+html:not(.dark) .text-white {
+  color: #0f172a;
+}
+html:not(.dark) .text-slate-100 {
+  color: #0f172a;
+}
+html:not(.dark) .text-slate-200 {
+  color: #1e293b;
+}
+html:not(.dark) .text-slate-300 {
+  color: #334155;
+}
+html:not(.dark) .text-slate-400 {
+  color: #475569;
+}
+html:not(.dark) .text-slate-500 {
+  color: #64748b;
+}
+html:not(.dark) .text-indigo-100 {
+  color: #4338ca;
+}
+html:not(.dark) .text-indigo-300,
+html:not(.dark) .text-indigo-300\/80 {
+  color: #4f46e5;
+}
+
+/* ── Borders ─────────────────────────────────────────── */
+html:not(.dark) .border-white\/8 {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html:not(.dark) .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.10);
+}
+html:not(.dark) .border-white\/12 {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+html:not(.dark) .border-white\/16 {
+  border-color: rgba(0, 0, 0, 0.16);
+}
+html:not(.dark) .border-slate-850\/50 {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ── Mobile dock ─────────────────────────────────────── */
+html:not(.dark) .bg-slate-900\/90 {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ── Hover / active state backgrounds ────────────────── */
+html:not(.dark) .hover\:bg-white\/\[0\.06\]:hover {
+  background-color: #e2e8f0;
+}
+html:not(.dark) .hover\:bg-white\/\[0\.075\]:hover {
+  background-color: #e2e8f0;
+}
+html:not(.dark) .hover\:bg-white\/\[0\.08\]:hover {
+  background-color: #cbd5e1;
+}
+html:not(.dark) .hover\:bg-indigo-300\/24:hover {
+  background-color: rgba(79, 70, 229, 0.10);
+}
+html:not(.dark) .hover\:border-indigo-300\/24:hover {
+  border-color: rgba(79, 70, 229, 0.24);
+}
+
+/* ── Focus rings ─────────────────────────────────────── */
+html:not(.dark) .focus\:ring-indigo-300:focus {
+  --tw-ring-color: #6366f1;
+}
+
+/* ── Sidebar nav active state ────────────────────────── */
+html:not(.dark) .bg-white {
+  /* keep white buttons as white */
+}
+html:not(.dark) .shadow-\[0_12px_34px_rgba\(99\,102\,241\,0\.2\)\] {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+}
+
+/* ── Keep coloured backgrounds on brand/gradient elms ── */
+html:not(.dark) .bg-brand-600,
+html:not(.dark) .bg-gradient-to-br,
+html:not(.dark) .bg-gradient-to-r,
+html:not(.dark) .bg-gradient-to-t,
+html:not(.dark) .bg-indigo-500,
+html:not(.dark) .bg-rose-500,
+html:not(.dark) .bg-emerald-400,
+html:not(.dark) .bg-red-600,
+html:not(.dark) .bg-red-800 {
+  /* keep their original colours */
+}
+/* Keep white text on coloured/brand backgrounds */
+html:not(.dark) .bg-brand-600 .text-white,
+html:not(.dark) .bg-gradient-to-br .text-white,
+html:not(.dark) .bg-gradient-to-r .text-white,
+html:not(.dark) .bg-gradient-to-t .text-white,
+html:not(.dark) .bg-indigo-500 .text-white,
+html:not(.dark) .bg-rose-500 .text-white,
+html:not(.dark) .bg-emerald-400 .text-white {
+  color: #ffffff;
+}
+/* Same element has both coloured bg and text-white */
+html:not(.dark) .bg-brand-600.text-white,
+html:not(.dark) .bg-gradient-to-br.text-white,
+html:not(.dark) .bg-indigo-500.text-white,
+html:not(.dark) .bg-rose-500.text-white {
+  color: #ffffff;
+}
+/* Keep dark text on white backgrounds in light mode */
+html:not(.dark) .bg-white {
+  color: #0f172a;
+}
+
+/* ── Rose (danger/delete) colours ────────────────────── */
+html:not(.dark) .text-rose-200 {
+  color: #be123c;
+}
+html:not(.dark) .text-rose-300 {
+  color: #e11d48;
+}
+html:not(.dark) .bg-rose-400\/10 {
+  background-color: #fdf2f8;
+}
+html:not(.dark) .bg-rose-400\/12 {
+  background-color: #fce7f3;
+}
+html:not(.dark) .hover\:bg-rose-400\/10:hover {
+  background-color: #fdf2f8;
+}
+html:not(.dark) .hover\:bg-rose-400\/16:hover {
+  background-color: #fce7f3;
+}
+html:not(.dark) .hover\:text-rose-300:hover {
+  color: #e11d48;
+}
+
+/* ── Empty state suggested habits ────────────────────── */
+html:not(.dark) .bg-emerald-400\/10 {
+  background-color: #ecfdf5;
+}
+html:not(.dark) .border-emerald-400\/30 {
+  border-color: #6ee7b7;
+}
+html:not(.dark) .text-emerald-400 {
+  color: #059669;
+}
+
+/* ── Category filter pills ───────────────────────────── */
+html:not(.dark) .bg-indigo-500 {
+  /* keep indigo highlight */
+}
+html:not(.dark) .bg-indigo-500.text-white {
+  color: #ffffff;
+}
+
+/* ── Progress bar gradient containers ────────────────── */
+html:not(.dark) .bg-white\/\[0\.035\],
+html:not(.dark) .bg-white\/\[0\.045\] {
+  /* already overridden above */
+}

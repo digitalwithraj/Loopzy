@@ -1,0 +1,226 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // 0. Global Safety Net (Default Deny)
+    // ==========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==========================================
+    // Core Primitive Definitions (Hardened helpers)
+    // ==========================================
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Checking if user email is verified
+    function isVerified() {
+      return isSignedIn() && (request.auth.token.email_verified == true);
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ==========================================
+    // Entity Validation Blueprints
+    // ==========================================
+    
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['id', 'username', 'avatar', 'timezone', 'onboardingCompleted', 'isPremium', 'createdAt'])
+        && data.keys().size() == 7
+        && data.id is string
+        && data.id == request.auth.uid
+        && data.username is string
+        && data.username.size() > 0
+        && data.username.size() <= 100
+        && data.avatar is string
+        && data.avatar.size() <= 100
+        && data.timezone is string
+        && data.timezone.size() <= 50
+        && data.onboardingCompleted is bool
+        && data.isPremium is bool
+        && data.createdAt is string
+        && data.createdAt.size() <= 50;
+    }
+
+    function isValidHabit(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'category', 'frequency', 'frequencyDays', 'isArchived', 'createdAt'])
+        && (data.keys().size() == 8 || (data.keys().size() == 9 && data.keys().hasAll(['reminderTime'])) || (data.keys().size() == 10 && data.keys().hasAll(['reminderTime', 'description'])))
+        && data.id is string
+        && data.id.size() <= 128
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 200
+        && (!data.keys().hasAll(['description']) || (data.description is string && data.description.size() <= 1000))
+        && data.category is string
+        && (data.category == 'Mind' || data.category == 'Body' || data.category == 'Spirit' || data.category == 'Focus' || data.category == 'Routine')
+        && data.frequency is string
+        && (data.frequency == 'daily' || data.frequency == 'weekly' || data.frequency == 'custom')
+        && data.frequencyDays is list
+        && data.frequencyDays.size() <= 7
+        && (!data.keys().hasAll(['reminderTime']) || (data.reminderTime is string && data.reminderTime.size() <= 32))
+        && data.isArchived is bool
+        && data.createdAt is string
+        && data.createdAt.size() <= 50;
+    }
+
+    function isValidHabitLog(data) {
+      return data.keys().hasAll(['id', 'userId', 'habitId', 'date', 'completed', 'updatedAt'])
+        && (data.keys().size() == 6 || (data.keys().size() == 7 && data.keys().hasAll(['note'])))
+        && data.id is string
+        && data.id.size() <= 128
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.habitId is string
+        && data.habitId.size() <= 128
+        && data.date is string
+        && data.date.size() <= 20
+        && data.completed is bool
+        && (!data.keys().hasAll(['note']) || (data.note is string && data.note.size() <= 100))
+        && data.updatedAt is string
+        && data.updatedAt.size() <= 50;
+    }
+
+    function isValidReminder(data) {
+      return data.keys().hasAll(['id', 'userId', 'type', 'time', 'days', 'active', 'title'])
+        && (data.keys().size() == 7 || (data.keys().size() == 8 && data.keys().hasAll(['habitId'])))
+        && data.id is string
+        && data.id.size() <= 128
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.type is string
+        && (data.type == 'daily' || data.type == 'habit')
+        && data.time is string
+        && data.time.size() <= 10
+        && data.days is list
+        && data.days.size() <= 7
+        && data.active is bool
+        && data.title is string
+        && data.title.size() <= 200
+        && (!data.keys().hasAll(['habitId']) || (data.habitId is string && data.habitId.size() <= 128));
+    }
+
+    // ==========================================
+    // 1. User Profiles Collection
+    // ==========================================
+    match /profiles/{userId} {
+      allow get: if isVerified() && userId == request.auth.uid;
+      allow list: if isVerified() && userId == request.auth.uid;
+      
+      allow create: if isVerified() 
+        && userId == request.auth.uid 
+        && isValidUserProfile(incoming())
+        && incoming().isPremium == false; // Forbid self-upgrading on registration
+        
+      allow update: if isVerified()
+        && userId == request.auth.uid
+        && isValidUserProfile(incoming())
+        && (
+          // Action: Complete Onboarding / edit basic preferences
+          incoming().diff(existing()).affectedKeys().hasOnly(['username', 'avatar', 'timezone', 'onboardingCompleted']) ||
+          // Action: Standard profile adjustment
+          incoming().diff(existing()).affectedKeys().hasOnly(['username', 'avatar', 'timezone']) ||
+          // Action: Upgrading to premium (Mock upgrade checkout)
+          (incoming().diff(existing()).affectedKeys().hasOnly(['isPremium']) && incoming().isPremium == true)
+        );
+        
+      allow delete: if false; // Profiles are permanent
+    }
+
+    // ==========================================
+    // 2. Habits Collection
+    // ==========================================
+    match /habits/{habitId} {
+      allow get, list: if isVerified() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isVerified()
+        && isValidId(habitId)
+        && isValidHabit(incoming())
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) // Relational Sync Check
+        && incoming().userId == request.auth.uid;
+        
+      allow update: if isVerified()
+        && isValidId(habitId)
+        && isValidHabit(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && (
+          // Action: Modify habit properties
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'category', 'frequency', 'frequencyDays', 'reminderTime']) ||
+          // Action: Archive toggle
+          incoming().diff(existing()).affectedKeys().hasOnly(['isArchived'])
+        );
+        
+      allow delete: if isVerified()
+        && isValidId(habitId)
+        && existing().userId == request.auth.uid;
+    }
+
+    // ==========================================
+    // 3. Habit Check-in Logs Collection
+    // ==========================================
+    match /habit_logs/{logId} {
+      allow get, list: if isVerified() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isVerified()
+        && isValidId(logId)
+        && isValidHabitLog(incoming())
+        && incoming().userId == request.auth.uid
+        // Secure relational sync: User must own the corresponding parent Habit
+        && get(/databases/$(database)/documents/habits/$(incoming().habitId)).data.userId == request.auth.uid;
+        
+      allow update: if isVerified()
+        && isValidId(logId)
+        && isValidHabitLog(incoming())
+        && incoming().userId == existing().userId
+        && incoming().habitId == existing().habitId
+        && (
+          // Action: Update logs status / add reflection
+          incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'note', 'updatedAt'])
+        );
+        
+      allow delete: if isVerified()
+        && isValidId(logId)
+        && existing().userId == request.auth.uid;
+    }
+
+    // ==========================================
+    // 4. Reminders Collection
+    // ==========================================
+    match /reminders/{reminderId} {
+      allow get, list: if isVerified() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isVerified()
+        && isValidId(reminderId)
+        && isValidReminder(incoming())
+        && incoming().userId == request.auth.uid;
+        
+      allow update: if isVerified()
+        && isValidId(reminderId)
+        && isValidReminder(incoming())
+        && incoming().userId == existing().userId
+        && (
+          // Action: Toggle alarm properties
+          incoming().diff(existing()).affectedKeys().hasOnly(['time', 'days', 'active', 'title'])
+        );
+        
+      allow delete: if isVerified()
+        && isValidId(reminderId)
+        && existing().userId == request.auth.uid;
+    }
+  }
+}
