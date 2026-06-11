@@ -10,11 +10,6 @@ interface AuthProps {
   onAuthSuccess: () => void;
 }
 
-interface AuthErrorInfo {
-  type: 'account_exists' | 'account_not_found' | 'wrong_password' | 'generic';
-  message: string;
-}
-
 function getUserFriendlyAuthError(error: { message: string; code?: string }): string {
   const msg = error.message.toLowerCase();
   const code = error.code?.toLowerCase() ?? '';
@@ -52,7 +47,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
   const [resetSent, setResetSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmScreen, setConfirmScreen] = useState<{ email: string } | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
@@ -81,14 +76,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
     });
     setLoading(false);
     if (error) {
-      if (error.message.toLowerCase().includes('user already registered')) {
-        setAuthError({
-          type: 'account_exists',
-          message: 'An account with this email already exists.',
-        });
-      } else {
-        setAuthError({ type: 'generic', message: getUserFriendlyAuthError(error) });
-      }
+      setAuthError(getUserFriendlyAuthError(error));
     } else {
       setConfirmScreen({ email });
     }
@@ -98,29 +86,11 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
     setLoading(true);
     setAuthError(null);
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email.trim().toLowerCase())
-      .maybeSingle();
-
-    if (!profile) {
-      setLoading(false);
-      setAuthError({
-        type: 'account_not_found',
-        message: 'No account exists with this email.',
-      });
-      return;
-    }
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
     if (error) {
-      setAuthError({
-        type: 'wrong_password',
-        message: 'Incorrect email or password. Please try again.',
-      });
+      setAuthError(getUserFriendlyAuthError(error));
     } else {
       onAuthSuccess();
     }
@@ -149,7 +119,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
     const { error } = await supabase.auth.resend({ type: 'signup', email: confirmScreen.email });
     setLoading(false);
     if (error) {
-      setAuthError({ type: 'generic', message: error.message });
+      setAuthError(error.message);
     } else {
       setResendMessage('Verification email sent successfully.');
       setTimeout(() => setResendMessage(null), 4000);
@@ -222,7 +192,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
             {authError && (
               <div className="mb-3 p-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 rounded-xl flex items-start gap-2 text-xs text-rose-600 dark:text-rose-400">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <p className="font-semibold leading-relaxed">{authError.message}</p>
+                <p className="font-semibold leading-relaxed">{authError}</p>
               </div>
             )}
 
@@ -290,40 +260,11 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           </div>
         )}
 
-        {/* Error card */}
+        {/* Error banner */}
         {authError && (
-          <div className="mb-3 p-3 sm:p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-xl flex flex-col items-start gap-2 text-xs text-rose-600 dark:text-rose-400">
-            <div className="flex items-start gap-2.5 w-full">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                {authError.type === 'account_exists' && (
-                  <p className="font-semibold text-sm text-rose-700 dark:text-rose-300">Account Already Exists</p>
-                )}
-                {authError.type === 'account_not_found' && (
-                  <p className="font-semibold text-sm text-rose-700 dark:text-rose-300">Account Not Found</p>
-                )}
-                {authError.type === 'wrong_password' && (
-                  <p className="font-semibold text-sm text-rose-700 dark:text-rose-300">Incorrect Email or Password</p>
-                )}
-                <p className="text-rose-600 dark:text-rose-400">{authError.message}</p>
-              </div>
-            </div>
-            {(authError.type === 'account_exists' || authError.type === 'account_not_found') && (
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthError(null);
-                  if (authError.type === 'account_exists') {
-                    setIsSignUp(false);
-                  } else {
-                    setIsSignUp(true);
-                  }
-                }}
-                className="text-brand-500 hover:text-brand-400 font-semibold text-xs ml-7 cursor-pointer transition"
-              >
-                {authError.type === 'account_exists' ? 'Sign In \u2192' : 'Create Account \u2192'}
-              </button>
-            )}
+          <div className="mb-2 p-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 rounded-xl flex items-start gap-2 text-xs text-rose-600 dark:text-rose-400">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <p className="font-semibold leading-relaxed">{authError}</p>
           </div>
         )}
 
