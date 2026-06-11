@@ -511,9 +511,6 @@ export default function Dashboard({
                               <h3 className={`truncate text-sm font-black ${completed ? 'text-slate-400 line-through' : 'text-white'}`}>
                                 {habit.name}
                               </h3>
-                              <span className="rounded-full border border-white/8 px-2 py-0.5 text-[10px] font-bold text-slate-400">
-                                {habit.category}
-                              </span>
                             </div>
                             <p className="mt-0.5 truncate text-xs text-slate-500">{habit.description}</p>
                             <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-500">

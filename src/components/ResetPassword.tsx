@@ -191,23 +191,23 @@ export default function ResetPassword({ onComplete }: ResetPasswordProps) {
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-700 dark:text-slate-300 pl-1">New Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/20 cursor-text transition"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl pl-12 pr-12 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/20 cursor-text transition"
                 id="reset-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition"
-                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-500 transition-colors cursor-pointer p-2"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -215,23 +215,23 @@ export default function ResetPassword({ onComplete }: ResetPasswordProps) {
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-700 dark:text-slate-300 pl-1">Confirm Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type={showConfirm ? 'text' : 'password'}
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/20 cursor-text transition"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl pl-12 pr-12 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/20 cursor-text transition"
                 id="reset-confirm-password"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition"
-                tabIndex={-1}
+                aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-500 transition-colors cursor-pointer p-2"
               >
-                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>

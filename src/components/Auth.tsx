@@ -370,7 +370,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -378,19 +378,17 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
                     onChange={(e) => { setPassword(e.target.value); setAuthError(null); }}
                     onBlur={handlePasswordBlur}
                     placeholder="••••••••"
-                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/20 cursor-text transition"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl pl-12 pr-12 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/20 cursor-text transition"
                     id="login-password"
                   />
-                  {isSignUp && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-500 transition-colors cursor-pointer p-2"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
                 {isSignUp && passwordError && (
                   <p className="text-[11px] text-rose-500 dark:text-rose-400 leading-relaxed pt-0.5">
