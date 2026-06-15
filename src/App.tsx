@@ -4,12 +4,13 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { UserProfile, Habit, HabitLog, HabitCategory, HabitFrequency, CustomDay } from './types';
+import { UserProfile, Habit, HabitLog, HabitCategory, HabitFrequency, CustomDay, HabitStatus } from './types';
 import Auth from './components/Auth';
 import Onboarding, { OnboardingData } from './components/Onboarding';
 import ResetPassword from './components/ResetPassword';
 import AuthCallback from './components/AuthCallback';
 import Dashboard from './components/Dashboard';
+import MyLoops from './components/MyLoops';
 import Analytics from './components/Analytics';
 import ExportPanel from './components/ExportPanel';
 import HabitForm from './components/HabitForm';
@@ -18,7 +19,7 @@ import { supabase, isSupabaseEnabled } from './supabase';
 import { calculateConsistencyScore, computeHabitMetrics, formatDate } from './utils/streak';
 import { scheduledDayIndexesForHabit } from './utils/habitSchedule';
 import { useReminderChecker, requestNotificationPermission } from './hooks/useReminderChecker';
-import { Calendar, Bell, Download, Moon, Sun, CheckCircle, X, FileText, LogOut, Flame, Target, Settings as SettingsIcon } from 'lucide-react';
+import { Calendar, Bell, Download, Moon, Sun, CheckCircle, X, FileText, LogOut, Flame, Target, List, Settings as SettingsIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import loopzyLogoLight from '../logo light mode.png';
 import loopzyLogoDark from '../logo dark mode.png';
@@ -80,7 +81,7 @@ export default function App() {
   const [showResetPassword, setShowResetPassword] = useState<boolean>(false);
 
   // Navigation and Theme state
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'reports' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'myloops' | 'analytics' | 'reports' | 'settings'>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('loopzy_dark_theme') === 'true';
   });
@@ -492,6 +493,7 @@ export default function App() {
       customDays: frequency === 'custom' ? rowCustomDays : ([] as CustomDay[]),
       reminderTime: row.reminder_time ?? '08:00',
       isArchived: row.is_active === false,
+      status: (row.status ?? (row.is_active === false ? 'archived' : 'active')) as HabitStatus,
       createdAt: row.created_at,
     };
 
@@ -746,6 +748,7 @@ export default function App() {
       custom_days: resolvedCustomDays,
       reminder_time: habitData.reminderTime,
       is_active: !habitData.isArchived,
+      status: habitData.isArchived ? 'archived' : 'active',
     };
     if (!isEditing) {
       payload.created_at = new Date().toISOString();
@@ -876,6 +879,52 @@ export default function App() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  // PAUSE / RESUME / ARCHIVE HANDLERS
+  const handlePauseHabit = async (habitId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser?.id || !supabase) return { success: false, error: 'Not connected' };
+    const { error } = await supabase
+      .from('habits')
+      .update({ status: 'paused', is_active: false })
+      .eq('id', habitId);
+    if (error) {
+      console.error('[Loopzy] Pause habit error:', error);
+      return { success: false, error: error.message };
+    }
+    await refetchHabits(currentUser.id);
+    triggerAlertBubble('Loop Paused', 'The loop has been paused and won\'t appear on your dashboard.');
+    return { success: true };
+  };
+
+  const handleResumeHabit = async (habitId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser?.id || !supabase) return { success: false, error: 'Not connected' };
+    const { error } = await supabase
+      .from('habits')
+      .update({ status: 'active', is_active: true })
+      .eq('id', habitId);
+    if (error) {
+      console.error('[Loopzy] Resume habit error:', error);
+      return { success: false, error: error.message };
+    }
+    await refetchHabits(currentUser.id);
+    triggerAlertBubble('Loop Resumed', 'The loop is active again on your dashboard.');
+    return { success: true };
+  };
+
+  const handleArchiveHabit = async (habitId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser?.id || !supabase) return { success: false, error: 'Not connected' };
+    const { error } = await supabase
+      .from('habits')
+      .update({ status: 'archived', is_active: false })
+      .eq('id', habitId);
+    if (error) {
+      console.error('[Loopzy] Archive habit error:', error);
+      return { success: false, error: error.message };
+    }
+    await refetchHabits(currentUser.id);
+    triggerAlertBubble('Loop Archived', 'The loop has been archived.');
+    return { success: true };
   };
 
   // UPGRADE PLAN MOCK
@@ -1159,6 +1208,7 @@ export default function App() {
               <nav className="space-y-2">
                 {[
                   { id: 'dashboard', label: 'Dashboard', icon: CheckCircle },
+                  { id: 'myloops', label: 'My Loops', icon: List },
                   { id: 'analytics', label: 'Insights', icon: Calendar },
                   { id: 'reports', label: 'Reports', icon: Download },
                   { id: 'settings', label: 'Settings', icon: SettingsIcon },
@@ -1240,6 +1290,7 @@ export default function App() {
           <nav className="md:hidden fixed bottom-1.5 left-2.5 right-2.5 bg-slate-900/90 dark:bg-slate-900 border border-slate-850/50 h-14 rounded-2xl flex items-center justify-around p-1 shadow-2xl z-40 backdrop-blur-md">
             {[
               { id: 'dashboard', label: 'Checklist', icon: CheckCircle },
+              { id: 'myloops', label: 'Loops', icon: List },
               { id: 'analytics', label: 'Metrics', icon: Calendar },
               { id: 'reports', label: 'Reports', icon: FileText },
               { id: 'settings', label: 'Settings', icon: SettingsIcon },
@@ -1327,6 +1378,27 @@ export default function App() {
                   onToggleCheckIn={handleToggleCheckIn}
                   onUpgradeToPremium={handleUpgradeMock}
                   onNavigateToInsights={() => setActiveTab('analytics')}
+                />
+              )}
+
+              {activeTab === 'myloops' && (
+                <MyLoops
+                  habits={habits}
+                  logs={logs}
+                  todayStr={todayStr}
+                  onEditHabit={(h) => {
+                    setEditingHabit(h);
+                    setShowHabitForm(true);
+                  }}
+                  onDeleteHabit={deleteHabit}
+                  onPauseHabit={handlePauseHabit}
+                  onResumeHabit={handleResumeHabit}
+                  onArchiveHabit={handleArchiveHabit}
+                  onCreateHabit={() => {
+                    setEditingHabit(null);
+                    setPrefillData(null);
+                    setShowHabitForm(true);
+                  }}
                 />
               )}
 
