@@ -27,6 +27,9 @@ import {
   ChevronRight,
   Flame,
   Target,
+  Smartphone,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import avatarStudentMale from '../../Avatar/male avatar 2.png';
@@ -223,6 +226,7 @@ export default function Settings({
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'account', label: 'Account', icon: Shield },
+    { id: 'pwa', label: 'PWA', icon: Smartphone },
   ];
 
   const renderSectionPills = () => (
@@ -585,6 +589,103 @@ export default function Settings({
     </PremiumCard>
   );
 
+  const [pwaInstallState, setPwaInstallState] = useState<'installed' | 'available' | 'unavailable'>('unavailable');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setPwaInstallState('installed');
+      return;
+    }
+
+    const handler = () => setPwaInstallState('available');
+    window.addEventListener('beforeinstallprompt', handler);
+
+    window.addEventListener('appinstalled', () => setPwaInstallState('installed'));
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handlePwaInstall = async () => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      const promptEvent = e as any;
+      promptEvent.prompt();
+      promptEvent.userChoice.then((choice: { outcome: string }) => {
+        if (choice.outcome === 'accepted') setPwaInstallState('installed');
+      });
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+    window.dispatchEvent(new Event('beforeinstallprompt'));
+  };
+
+  const renderPwaSection = () => (
+    <PremiumCard>
+      <div className="flex items-center gap-2 mb-5">
+        <Smartphone className="h-4 w-4 text-indigo-300" />
+        <h2 className="text-sm font-black uppercase tracking-wider text-slate-300">PWA</h2>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-2xl border border-white/6 bg-white/[0.025] px-4 py-3">
+          <div className="flex items-center gap-3">
+            {isOnline ? <Wifi className="h-5 w-5 text-emerald-400" /> : <WifiOff className="h-5 w-5 text-amber-400" />}
+            <div>
+              <p className="text-sm font-black text-white">Connection</p>
+              <p className="text-xs text-slate-400">{isOnline ? 'Online' : 'Offline'}</p>
+            </div>
+          </div>
+          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${isOnline ? 'border-emerald-400/30 text-emerald-400' : 'border-amber-400/30 text-amber-400'}`}>
+            {isOnline ? 'Connected' : 'Disconnected'}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between rounded-2xl border border-white/6 bg-white/[0.025] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Smartphone className="h-5 w-5 text-indigo-300" />
+            <div>
+              <p className="text-sm font-black text-white">App Status</p>
+              <p className="text-xs text-slate-400">
+                {pwaInstallState === 'installed' ? 'Installed on device' : pwaInstallState === 'available' ? 'Ready to install' : 'Not available'}
+              </p>
+            </div>
+          </div>
+          {pwaInstallState === 'available' && (
+            <button
+              onClick={handlePwaInstall}
+              className="rounded-xl bg-indigo-500 px-4 py-2 text-xs font-black text-white transition hover:bg-indigo-400"
+            >
+              Install
+            </button>
+          )}
+          {pwaInstallState === 'installed' && (
+            <span className="rounded-full border border-emerald-400/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
+              Installed
+            </span>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-white/6 bg-white/[0.025] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-sm font-black text-white">Version</p>
+              <p className="text-xs text-slate-400">0.0.0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </PremiumCard>
+  );
+
   const renderAccountSection = () => (
     <PremiumCard>
       <div className="flex items-center gap-2 mb-5">
@@ -668,6 +769,7 @@ export default function Settings({
         {activeSection === 'notifications' && renderNotificationsSection()}
         {activeSection === 'appearance' && renderAppearanceSection()}
         {activeSection === 'account' && renderAccountSection()}
+        {activeSection === 'pwa' && renderPwaSection()}
       </div>
 
       {renderAvatarPicker()}

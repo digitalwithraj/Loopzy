@@ -15,6 +15,8 @@ import Analytics from './components/Analytics';
 import ExportPanel from './components/ExportPanel';
 import HabitForm from './components/HabitForm';
 import Settings from './components/Settings';
+import PwaInstall from './components/PwaInstall';
+import OfflineDetector from './components/OfflineDetector';
 import { supabase, isSupabaseEnabled } from './supabase';
 import { calculateConsistencyScore, computeHabitMetrics, formatDate } from './utils/streak';
 import { scheduledDayIndexesForHabit } from './utils/habitSchedule';
@@ -1075,6 +1077,12 @@ export default function App() {
   return (
     <div className="min-h-screen overflow-x-hidden font-sans transition-colors duration-300 relative flex flex-col md:flex-row pb-16 md:pb-0"
       style={{ backgroundColor: 'var(--app-surface)', color: 'var(--app-text)' }}>
+
+      {/* Offline detector banner */}
+      <OfflineDetector />
+
+      {/* PWA install prompt */}
+      <PwaInstall />
 
       {/* Development error banner — shows exact Supabase errors */}
       {devErrorBanner && (
