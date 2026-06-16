@@ -187,9 +187,6 @@ export default function MyLoops({
                   ? Math.round((metrics.totalScheduledCount - metrics.missedCount) / metrics.totalScheduledCount * 100)
                   : 0}% completion
               </span>
-              <span className="inline-flex items-center gap-1 text-slate-500">
-                {habit.category}
-              </span>
             </div>
           </div>
 
