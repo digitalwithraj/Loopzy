@@ -35,7 +35,7 @@ export default function ExportPanel({
   const [selectedRangePreset, setSelectedRangePreset] = useState<string>('weekly');
   const [showNotesInReport, setShowNotesInReport] = useState(true);
 
-  const activeHabits = habits.filter((h) => !h.isArchived);
+  const activeHabits = habits;
 
   // Compute calculated date range
   const configDays = useMemo(() => {

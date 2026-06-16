@@ -197,7 +197,7 @@ export default function Dashboard({
     setActiveTab(initialTab);
   }, [initialTab]);
 
-  const activeHabits = useMemo(() => habits.filter((habit) => !habit.isArchived), [habits]);
+  const activeHabits = useMemo(() => habits, [habits]);
 
   const todayScheduledHabits = useMemo(
     () =>

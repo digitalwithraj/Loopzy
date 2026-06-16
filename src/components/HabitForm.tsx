@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { CustomDay, Habit, HabitCategory, HabitFrequency } from '../types';
 import { CUSTOM_DAY_OPTIONS, customDaysToFrequencyDays, frequencyDaysToCustomDays } from '../utils/habitSchedule';
-import { X, Check, Trash2, Archive, ArchiveRestore, Bell } from 'lucide-react';
+import { X, Check, Trash2, Bell } from 'lucide-react';
 import { motion } from 'motion/react';
 import TimePicker from './TimePicker';
 
@@ -21,7 +21,6 @@ interface HabitFormProps {
     frequencyDays: number[];
     customDays: CustomDay[];
     reminderTime: string;
-    isArchived: boolean;
   }) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string };
   onDelete?: (id: string) => void;
   onClose: () => void;
@@ -76,7 +75,6 @@ export default function HabitForm({ habit, prefillData, onSave, onDelete, onClos
   const [customDays, setCustomDays] = useState<CustomDay[]>([]);
   const [reminderTime, setReminderTime] = useState('08:00');
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [isArchived, setIsArchived] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -99,7 +97,6 @@ export default function HabitForm({ habit, prefillData, onSave, onDelete, onClos
       setFrequencyDays(habit.frequencyDays);
       setCustomDays(habit.customDays?.length ? habit.customDays : frequencyDaysToCustomDays(habit.frequencyDays));
       setReminderTime(habit.reminderTime);
-      setIsArchived(habit.isArchived);
       setIsDescriptionExpanded(!!habit.description);
     } else if (prefillData) {
       setName(prefillData.name);
@@ -109,7 +106,6 @@ export default function HabitForm({ habit, prefillData, onSave, onDelete, onClos
       setFrequencyDays([0, 1, 2, 3, 4, 5, 6]);
       setCustomDays([]);
       setReminderTime('08:00');
-      setIsArchived(false);
       setIsDescriptionExpanded(false);
     } else {
       setName('');
@@ -119,7 +115,6 @@ export default function HabitForm({ habit, prefillData, onSave, onDelete, onClos
       setFrequencyDays([0, 1, 2, 3, 4, 5, 6]);
       setCustomDays([]);
       setReminderTime('08:00');
-      setIsArchived(false);
       setIsDescriptionExpanded(false);
     }
   }, [habit, prefillData]);
@@ -180,7 +175,6 @@ export default function HabitForm({ habit, prefillData, onSave, onDelete, onClos
       frequencyDays: frequency === 'custom' ? customDaysToFrequencyDays(customDays) : frequencyDays,
       customDays: frequency === 'custom' ? customDays : [],
       reminderTime,
-      isArchived,
     };
     console.log('STEP 2A - Form payload built');
     console.log(payload);
@@ -392,28 +386,6 @@ export default function HabitForm({ habit, prefillData, onSave, onDelete, onClos
                 <span className="text-[11px] font-bold text-gray-800 ml-auto">{formatReminderTime(reminderTime)}</span>
               </div>
             </div>
-
-            {/* ── ARCHIVE TOGGLE (editing only) ─────────────────────── */}
-            {habit && (
-              <div className="flex items-center justify-between px-3.5 py-2 bg-brand-50/70 border border-brand-100 rounded-xl">
-                <div className="flex items-center gap-1.5">
-                  <Archive className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs font-semibold text-gray-700">Archive Loop?</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsArchived(!isArchived)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1 transition cursor-pointer ${
-                    isArchived
-                      ? 'border-brand-600 text-brand-600 bg-white'
-                      : 'border-gray-200 text-gray-500 bg-white'
-                  }`}
-                  id="archive-toggle-btn"
-                >
-                  {isArchived ? <><ArchiveRestore className="w-3 h-3" /> Archived</> : 'Active'}
-                </button>
-              </div>
-            )}
 
             {/* ── FOOTER ACTIONS ────────────────────────────────────── */}
             <div className={`flex items-center ${habit && onDelete ? 'gap-2' : ''}`}>

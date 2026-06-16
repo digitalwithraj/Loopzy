@@ -122,16 +122,15 @@ export function computeHabitMetrics(
 }
 
 /**
- * Calculates a global Consistency Score (0-100) based on all non-archived habits
+ * Calculates a global Consistency Score (0-100) based on all habits
  */
 export function calculateConsistencyScore(habits: Habit[], logs: HabitLog[], todayStr: string): number {
-  const activeHabits = habits.filter((h) => !h.isArchived);
-  if (activeHabits.length === 0) return 0;
+  if (habits.length === 0) return 0;
 
   let totalScheduled = 0;
   let totalCompleted = 0;
 
-  activeHabits.forEach((habit) => {
+  habits.forEach((habit) => {
     const metrics = computeHabitMetrics(habit, logs, todayStr);
     totalScheduled += metrics.totalScheduledCount;
     // Count completed logs for this habit

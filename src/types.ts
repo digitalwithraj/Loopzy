@@ -25,8 +25,6 @@ export type CustomDay =
   | 'saturday'
   | 'sunday';
 
-export type HabitStatus = 'active' | 'paused' | 'archived';
-
 export interface Habit {
   id: string;
   userId: string;
@@ -37,8 +35,6 @@ export interface Habit {
   frequencyDays: number[]; // 0 for Sun, 1 for Mon, etc.
   customDays: CustomDay[];
   reminderTime: string; // "HH:MM"
-  isArchived: boolean;
-  status: HabitStatus;
   createdAt: string;
 }
 

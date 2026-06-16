@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { UserProfile, Habit, HabitLog, HabitCategory, HabitFrequency, CustomDay, HabitStatus } from './types';
+import { UserProfile, Habit, HabitLog, HabitCategory, HabitFrequency, CustomDay } from './types';
 import Auth from './components/Auth';
 import Onboarding, { OnboardingData } from './components/Onboarding';
 import ResetPassword from './components/ResetPassword';
@@ -478,7 +478,7 @@ export default function App() {
   };
 
   // ── DB row ↔ TypeScript type converters ──────────────────────────────────
-  // Map DB row (actual schema: title, is_active) → app Habit type
+  // Map DB row → app Habit type
   const dbRowToHabit = (row: any): Habit => {
     const frequency = (row.frequency ?? 'daily') as HabitFrequency;
     const rowCustomDays: CustomDay[] = Array.isArray(row.custom_days) ? row.custom_days : [];
@@ -492,8 +492,6 @@ export default function App() {
       frequencyDays: [] as number[],
       customDays: frequency === 'custom' ? rowCustomDays : ([] as CustomDay[]),
       reminderTime: row.reminder_time ?? '08:00',
-      isArchived: row.is_active === false,
-      status: (row.status ?? (row.is_active === false ? 'archived' : 'active')) as HabitStatus,
       createdAt: row.created_at,
     };
 
@@ -690,7 +688,6 @@ export default function App() {
     frequencyDays: number[];
     customDays: Habit['customDays'];
     reminderTime: string;
-    isArchived: boolean;
   }): Promise<{ success: boolean; error?: string }> => {
     console.log('[Loopzy] handleSaveHabit — started');
 
@@ -747,8 +744,6 @@ export default function App() {
       frequency: habitData.frequency,
       custom_days: resolvedCustomDays,
       reminder_time: habitData.reminderTime,
-      is_active: !habitData.isArchived,
-      status: habitData.isArchived ? 'archived' : 'active',
     };
     if (!isEditing) {
       payload.created_at = new Date().toISOString();
@@ -879,52 +874,6 @@ export default function App() {
     } finally {
       setDeleting(false);
     }
-  };
-
-  // PAUSE / RESUME / ARCHIVE HANDLERS
-  const handlePauseHabit = async (habitId: string): Promise<{ success: boolean; error?: string }> => {
-    if (!currentUser?.id || !supabase) return { success: false, error: 'Not connected' };
-    const { error } = await supabase
-      .from('habits')
-      .update({ status: 'paused', is_active: false })
-      .eq('id', habitId);
-    if (error) {
-      console.error('[Loopzy] Pause habit error:', error);
-      return { success: false, error: error.message };
-    }
-    await refetchHabits(currentUser.id);
-    triggerAlertBubble('Loop Paused', 'The loop has been paused and won\'t appear on your dashboard.');
-    return { success: true };
-  };
-
-  const handleResumeHabit = async (habitId: string): Promise<{ success: boolean; error?: string }> => {
-    if (!currentUser?.id || !supabase) return { success: false, error: 'Not connected' };
-    const { error } = await supabase
-      .from('habits')
-      .update({ status: 'active', is_active: true })
-      .eq('id', habitId);
-    if (error) {
-      console.error('[Loopzy] Resume habit error:', error);
-      return { success: false, error: error.message };
-    }
-    await refetchHabits(currentUser.id);
-    triggerAlertBubble('Loop Resumed', 'The loop is active again on your dashboard.');
-    return { success: true };
-  };
-
-  const handleArchiveHabit = async (habitId: string): Promise<{ success: boolean; error?: string }> => {
-    if (!currentUser?.id || !supabase) return { success: false, error: 'Not connected' };
-    const { error } = await supabase
-      .from('habits')
-      .update({ status: 'archived', is_active: false })
-      .eq('id', habitId);
-    if (error) {
-      console.error('[Loopzy] Archive habit error:', error);
-      return { success: false, error: error.message };
-    }
-    await refetchHabits(currentUser.id);
-    triggerAlertBubble('Loop Archived', 'The loop has been archived.');
-    return { success: true };
   };
 
   // UPGRADE PLAN MOCK
@@ -1103,7 +1052,7 @@ export default function App() {
     }, 4500);
   };
 
-  const activeHabitsForShell = habits.filter((habit) => !habit.isArchived);
+  const activeHabitsForShell = habits;
   const shellCurrentStreak = activeHabitsForShell.length
     ? Math.max(...activeHabitsForShell.map((habit) => computeHabitMetrics(habit, logs, todayStr).currentStreak))
     : 0;
@@ -1391,9 +1340,6 @@ export default function App() {
                     setShowHabitForm(true);
                   }}
                   onDeleteHabit={deleteHabit}
-                  onPauseHabit={handlePauseHabit}
-                  onResumeHabit={handleResumeHabit}
-                  onArchiveHabit={handleArchiveHabit}
                   onCreateHabit={() => {
                     setEditingHabit(null);
                     setPrefillData(null);

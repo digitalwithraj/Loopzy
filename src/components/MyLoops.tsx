@@ -1,14 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Habit, HabitLog, HabitCategory } from '../types';
 import { computeHabitMetrics } from '../utils/streak';
 import {
   Search,
   Flame,
   Target,
-  CheckCircle,
-  PauseCircle,
-  PlayCircle,
-  Archive,
   Trash2,
   Edit3,
   BookOpen,
@@ -28,9 +24,6 @@ interface MyLoopsProps {
   todayStr: string;
   onEditHabit: (habit: Habit) => void;
   onDeleteHabit: (habitId: string) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string };
-  onPauseHabit: (habitId: string) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string };
-  onResumeHabit: (habitId: string) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string };
-  onArchiveHabit: (habitId: string) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string };
   onCreateHabit: () => void;
 }
 
@@ -41,24 +34,6 @@ const CATEGORY_META: Record<HabitCategory, { icon: React.ElementType; accent: st
   Focus: { icon: Target, accent: 'from-amber-400 to-orange-400', label: 'Focus' },
   Routine: { icon: ArchiveRestore, accent: 'from-cyan-400 to-blue-500', label: 'Routine' },
 };
-
-const STATUS_COLORS: Record<string, string> = {
-  active: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30',
-  paused: 'text-amber-400 bg-amber-400/10 border-amber-400/30',
-  archived: 'text-slate-500 bg-slate-500/10 border-slate-500/30',
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const colors = STATUS_COLORS[status] || STATUS_COLORS.archived;
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${colors}`}>
-      {status === 'active' && <CheckCircle className="h-3 w-3" />}
-      {status === 'paused' && <PauseCircle className="h-3 w-3" />}
-      {status === 'archived' && <Archive className="h-3 w-3" />}
-      {status}
-    </span>
-  );
-}
 
 function PremiumCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -136,29 +111,10 @@ export default function MyLoops({
   todayStr,
   onEditHabit,
   onDeleteHabit,
-  onPauseHabit,
-  onResumeHabit,
-  onArchiveHabit,
   onCreateHabit,
 }: MyLoopsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
-
-  const activeHabits = useMemo(
-    () => habits.filter((h) => h.status === 'active'),
-    [habits]
-  );
-
-  const pausedHabits = useMemo(
-    () => habits.filter((h) => h.status === 'paused'),
-    [habits]
-  );
-
-  const archivedHabits = useMemo(
-    () => habits.filter((h) => h.status === 'archived'),
-    [habits]
-  );
 
   const sortHabits = (list: Habit[]) => {
     return [...list].sort((a, b) => {
@@ -176,28 +132,12 @@ export default function MyLoops({
     return list.filter((h) => h.name.toLowerCase().includes(q));
   };
 
-  const sortedActive = useMemo(
-    () => filterByName(sortHabits(activeHabits)),
-    [activeHabits, searchQuery, logs, todayStr]
-  );
-
-  const sortedPaused = useMemo(
-    () => filterByName(sortHabits(pausedHabits)),
-    [pausedHabits, searchQuery, logs, todayStr]
-  );
-
-  const sortedArchived = useMemo(
-    () => filterByName(sortHabits(archivedHabits)),
-    [archivedHabits, searchQuery, logs, todayStr]
+  const sortedHabits = useMemo(
+    () => filterByName(sortHabits(habits)),
+    [habits, searchQuery, logs, todayStr]
   );
 
   const hasAnyLoops = habits.length > 0;
-  const totalVisible =
-    sortedActive.length + sortedPaused.length + (showArchived ? sortedArchived.length : 0);
-  const hasActiveOrPaused = useMemo(
-    () => sortedActive.length + sortedPaused.length > 0,
-    [sortedActive.length, sortedPaused.length]
-  );
 
   const handleDelete = async (habitId: string) => {
     const result = await onDeleteHabit(habitId);
@@ -206,7 +146,7 @@ export default function MyLoops({
     }
   };
 
-  function LoopCard({ habit }: { habit: Habit }) {
+  function LoopCard({ habit }: { habit: Habit; key?: string }) {
     const metrics = useMemo(
       () => computeHabitMetrics(habit, logs, todayStr),
       [habit, logs, todayStr]
@@ -228,12 +168,9 @@ export default function MyLoops({
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-sm font-black text-white">
-                {habit.name}
-              </h3>
-              <StatusBadge status={habit.status} />
-            </div>
+            <h3 className="truncate text-sm font-black text-white">
+              {habit.name}
+            </h3>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] font-bold">
               <span className="inline-flex items-center gap-1 text-orange-400">
@@ -251,7 +188,6 @@ export default function MyLoops({
                   : 0}% completion
               </span>
               <span className="inline-flex items-center gap-1 text-slate-500">
-                <Archive className="h-3 w-3" />
                 {habit.category}
               </span>
             </div>
@@ -269,30 +205,6 @@ export default function MyLoops({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-white/6 pt-3">
-          {habit.status === 'active' && (
-            <ActionButton
-              icon={PauseCircle}
-              label="Pause"
-              onClick={() => onPauseHabit(habit.id)}
-              className="text-amber-400 hover:bg-amber-400/10"
-            />
-          )}
-          {habit.status === 'paused' && (
-            <ActionButton
-              icon={PlayCircle}
-              label="Resume"
-              onClick={() => onResumeHabit(habit.id)}
-              className="text-emerald-400 hover:bg-emerald-400/10"
-            />
-          )}
-          {habit.status === 'active' && (
-            <ActionButton
-              icon={Archive}
-              label="Archive"
-              onClick={() => onArchiveHabit(habit.id)}
-              className="text-slate-400 hover:bg-white/[0.06]"
-            />
-          )}
           <ActionButton
             icon={Trash2}
             label="Delete"
@@ -326,29 +238,6 @@ export default function MyLoops({
     );
   }
 
-  function SectionHeader({
-    title,
-    count,
-    accentColor,
-    icon: Icon,
-  }: {
-    title: string;
-    count: number;
-    accentColor: string;
-    icon: React.ElementType;
-  }) {
-    if (count === 0) return null;
-    return (
-      <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${accentColor}`} />
-        <h2 className="text-sm font-black uppercase tracking-wider text-slate-300">{title}</h2>
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${accentColor} border-current/20`}>
-          {count}
-        </span>
-      </div>
-    );
-  }
-
   if (!hasAnyLoops) {
     return (
       <div className="relative min-h-full space-y-5 text-left text-slate-100">
@@ -379,19 +268,13 @@ export default function MyLoops({
     );
   }
 
-  useEffect(() => {
-    if (!hasActiveOrPaused && habits.length > 0) {
-      setShowArchived(true);
-    }
-  }, [hasActiveOrPaused, habits.length]);
-
   return (
     <div className="relative min-h-full space-y-5 text-left text-slate-100">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.22),transparent_62%)]" />
 
       <div className="relative">
         <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">My Loops</h1>
-        <p className="mt-1 text-sm text-slate-400">Manage and organize your active loops.</p>
+        <p className="mt-1 text-sm text-slate-400">Manage and organize your loops.</p>
       </div>
 
       <div className="relative">
@@ -415,7 +298,7 @@ export default function MyLoops({
         )}
       </div>
 
-      {totalVisible === 0 && searchQuery.trim() !== '' && (
+      {sortedHabits.length === 0 && searchQuery.trim() !== '' && (
         <PremiumCard className="flex flex-col items-center justify-center py-12">
           <Search className="h-8 w-8 text-slate-500" />
           <p className="mt-3 text-sm font-bold text-slate-400">No loops match "{searchQuery}"</p>
@@ -423,68 +306,13 @@ export default function MyLoops({
         </PremiumCard>
       )}
 
-      {totalVisible > 0 && (
-        <div className="space-y-6">
-          {sortedActive.length > 0 && (
-            <div className="space-y-3">
-              <SectionHeader title="Active" count={sortedActive.length} accentColor="text-emerald-400" icon={CheckCircle} />
-              <div className="grid gap-3">
-                <AnimatePresence initial={false}>
-                  {sortedActive.map((habit) => (
-                    <LoopCard key={habit.id} habit={habit} />
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
-
-          {sortedPaused.length > 0 && (
-            <div className="space-y-3">
-              <SectionHeader title="Paused" count={sortedPaused.length} accentColor="text-amber-400" icon={PauseCircle} />
-              <div className="grid gap-3">
-                <AnimatePresence initial={false}>
-                  {sortedPaused.map((habit) => (
-                    <LoopCard key={habit.id} habit={habit} />
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <button
-              onClick={() => setShowArchived(!showArchived)}
-              className="flex items-center gap-2 text-left"
-            >
-              <Archive className={`h-4 w-4 ${archivedHabits.length > 0 ? 'text-slate-400' : 'text-slate-600'}`} />
-              <h2 className={`text-sm font-black uppercase tracking-wider ${archivedHabits.length > 0 ? 'text-slate-300' : 'text-slate-600'}`}>
-                Archived
-              </h2>
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold text-slate-400 border-current/20`}>
-                {archivedHabits.length}
-              </span>
-              {archivedHabits.length > 0 && (
-                <span className="text-[10px] font-bold text-indigo-400">{showArchived ? 'Hide' : 'Show'}</span>
-              )}
-            </button>
-
-            {showArchived && sortedArchived.length > 0 && (
-              <div className="grid gap-3">
-                <AnimatePresence initial={false}>
-                  {sortedArchived.map((habit) => (
-                    <LoopCard key={habit.id} habit={habit} />
-                  ))}
-                </AnimatePresence>
-              </div>
-            )}
-
-            {showArchived && sortedArchived.length === 0 && (
-              <PremiumCard className="flex flex-col items-center justify-center py-8">
-                <Archive className="h-8 w-8 text-slate-600" />
-                <p className="mt-2 text-sm text-slate-500">No archived loops.</p>
-              </PremiumCard>
-            )}
-          </div>
+      {sortedHabits.length > 0 && (
+        <div className="grid gap-3">
+          <AnimatePresence initial={false}>
+            {sortedHabits.map((habit) => (
+              <LoopCard key={habit.id} habit={habit} />
+            ))}
+          </AnimatePresence>
         </div>
       )}
 

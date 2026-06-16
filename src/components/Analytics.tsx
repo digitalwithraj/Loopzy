@@ -26,7 +26,7 @@ interface AnalyticsProps {
 
 export default function Analytics({ habits, logs, todayStr }: AnalyticsProps) {
   const [selectedHabitId, setSelectedHabitId] = useState<string>('all');
-  const activeHabits = habits.filter((h) => !h.isArchived);
+  const activeHabits = habits;
 
   // Filter logs based on selected habit
   const filteredLogs = selectedHabitId === 'all'

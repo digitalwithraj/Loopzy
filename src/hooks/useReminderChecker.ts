@@ -28,7 +28,6 @@ export function useReminderChecker(
       const today = getTodayDate();
 
       for (const habit of habits) {
-        if (habit.isArchived) continue;
         if (habit.reminderTime !== currentHHMM) continue;
         if (!isHabitScheduledForDate(habit, new Date())) continue;
 

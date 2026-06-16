@@ -31,7 +31,7 @@ export default function Reminders({
   const [newTitle, setNewTitle] = useState('Morning Check-In Reflection');
   const [emailAlertsOnly, setEmailAlertsOnly] = useState(false);
 
-  const activeHabits = habits.filter((h) => !h.isArchived);
+  const activeHabits = habits;
 
   const handleCreateReminder = (e: React.FormEvent) => {
     e.preventDefault();
