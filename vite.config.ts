@@ -22,7 +22,7 @@ export default defineConfig(() => {
           short_name: 'Loopzy',
           description: 'Build consistency one loop at a time.',
           theme_color: '#4F46E5',
-          background_color: '#020617',
+          background_color: '#4F46E5',
           display: 'standalone',
           orientation: 'portrait',
           start_url: '/',
